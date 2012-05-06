@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Create polls{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block wrapper %}
+  <div>Create a Choice -</div>
+  <br />
+  <form method="post" action="/api/poll/">
+    Poll - 
+    <select id="pollId" name="pollId">
+      <option value="-1">Select a Poll</option>
+      {% for poll in polls %}
+        <option value="{{poll.id}}">{{poll.question}}</option>
+      {% endfor %}
+    </select> <a href="/poll/create/">Add</a>
+    <div style="clear:both"></div>
+    Choice - <input name="choice" type="text" />
+    <div style="clear:both"></div>
+    <input type="submit" value=" Create " />
+  </form>
+  <script type="text/javascript">
+  $(function() {
+    $("input[type=submit]").click(function() {
+      data = new Object();
+      data['pollId'] = $("select[name=pollId]").val().trim();
+      data['choice'] = $("input[name=choice]").val().trim();
+      if (data['pollId'] != "-1" && data['choice'])
+        $.ajax({
+          type: "POST",
+          url: "/api/choice/",
+          data: data,
+          success: function() {
+            alert("success");
+          },
+          error: function() {
+            alert("error");
+          }
+        });
+
+      return false;
+    });
+  });
+  </script>
+{% endblock %}

@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>{% block title %}{% endblock %} | Skeleton App</title>
+    <style type="text/css">
+      .wrapper {
+        margin: auto;
+        height: 600px;
+        width: 700px;
+        border: 1px solid #999;
+      }
+    </style>
+    <script type="text/javascript" src="/static/js/ext/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/utils/utils.js"></script>
+    <script type="text/javascript" src="/static/js/models/baseClass.js"></script>
+  {%- block head -%}{%- endblock -%}
+  </head>
+  <body>
+    <div class="wrapper">
+      <a href="/logout/" style="float:right">Logout</a>
+      {%- block wrapper -%}{%- endblock -%}
+    </div>
+    <form id="data">{% block formdata %}{% endblock %}</form>
+  </body>
+</html>

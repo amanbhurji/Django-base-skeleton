@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Show Polls{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block wrapper %}
+  <div>Polls -</div>
+  <br />
+  <ul>
+  {% for poll in polls %}
+    <li>{{poll.question}}
+        <ul>
+        {% for choice in poll.choice_set.all() %}
+          <li>{{choice.choice}} <span class="vote_count">[{{ choice.votes }}]</span><a class="upvote" href="/api/choice/{{choice.id}}/increment">+1</a></li>
+        {% endfor %}
+        </ul>
+    </li>
+  {% endfor %}
+  </ul>
+  <script type="text/javascript">
+  $(function() {
+
+    $(".upvote").click(function() {
+      var copy = $(this);
+      $.ajax({
+        url: copy.attr("href"),
+        type: "GET",
+        dataType: 'json',
+        success: function(response, textStatus, xmlHttpRequest) {
+          switch(xmlHttpRequest.getResponseHeader("Content-Type").toLowerCase().split(';')[0]){
+            case "text/xml":
+              // write function to build object from provided xml string
+              break;
+            case "application/json":
+              // write function to build object from provided json string
+              copy.prev('.vote_count').text('['+response.votes+']');
+              break;
+            default:
+              console.log("Unrecognized format: Request Failed!");
+          }
+        },
+        error: function(xmlHttpRequest,textStatus,errorThrown) {
+          alert("Request Failed!");
+        }
+      });
+      return false;
+    });
+
+  });
+  </script>
+{% endblock %}
+{% block formdata %}
+  <input type="hidden" id="choices" value="{{choices}}" />
+  <input type="hidden" id="polls" value="{{polls}}" />
+{% endblock %}

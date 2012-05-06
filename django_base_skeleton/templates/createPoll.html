@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Create polls{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block wrapper %}
+  <div>Create a Poll -</div>
+  <br />
+  <form method="post" action="/api/poll/">
+    Question - <input name="question" type="text" />
+    <div style="clear:both"></div>
+    Publication Date - <input name="pubDate" type="text" />
+    <div style="clear:both"></div>
+    <input type="submit" value=" Create " />
+  </form>
+  <script type="text/javascript">
+  $(function() {
+    $("input[type=submit]").click(function() {
+      data = new Object();
+      data['question'] = $("input[name=question]").val().trim();
+      data['pubDate'] = $("input[name=pubDate]").val().trim();
+      if (data['question'] && data['pubDate'])
+        $.ajax({
+          type: "POST",
+          url: "/api/poll/",
+          data: data,
+          success: function() {
+            alert("success");
+          },
+          error: function() {
+            alert("error");
+          }
+        });
+
+      return false;
+    });
+  });
+  </script>
+{% endblock %}

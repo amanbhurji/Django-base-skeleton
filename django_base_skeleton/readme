@@ -1,0 +1,182 @@
+This is a skeleton for building django apps with support for Piston, South, Jinja2, Celery using RabbitMQ and Memcached.
+I have tried to be verbose to help you setup quickly but in case you need help, feel free to email manpreet at msbhurji dot com
+#TODO Write a script to do all the installation
+
+Install django, mysql and piston ofcourse!
+yum install mysql mysql-server
+yum install django-piston
+yum install python-pip
+
+Lines marked with >_< in the project might need changes
+===============================================================================================================
+
+** important links --
+https://docs.djangoproject.com/en/1.3/intro/tutorial01/
+http://www.robertshady.com/content/creating-very-basic-api-using-python-django-and-piston
+http://south.aeracode.org/docs/tutorial/part1.html
+http://stackoverflow.com/questions/4840102/how-come-my-south-migrations-doesnt-work-for-django
+https://docs.djangoproject.com/en/1.3/howto/deployment/modwsgi/
+http://blog.stannard.net.au/2010/12/11/installing-django-with-apache-and-mod_wsgi-on-ubuntu-10-04/
+
+Commands run for django-
+django-admin.py startproject django_base_skeleton
+python manage.py start polls
+python manage.py startapp api
+python manage.py startapp polls
+python manage.py syncdb
+python manage.py schemamigration polls --initial #schema migrations are app based
+
+Add api and polls apps to INSTALLED_APPS in settings.py (If you plan to use South read details under South)
+You can remove views.py and models.py and have handlers in api so that it is solely the interaction gateway to the site with no models of its own.
+Similarly polls can be made to contain the models and views for a project by deleting other files in it
+
+To the Poll model to the admin site -
+Create a file admin.py in polls directory with the following content -
+from polls.models import Poll, Choice
+from django.contrib import admin
+
+admin.site.register(Poll)
+admin.site.register(Choice)
+This will add the Poll model to the admin site
+
+Add absolute path to the templates folder in TEMPLATE_DIRS in settings.py
+For jinja2 use the tarball and extract the jinja2 folder under django_base_skeleton/
+
+If you get the error django.core.exceptions.ImproperlyConfigured: Error loading MySQLdb module: No module named MySQLdb
+then easy_install / pip install MySQL-python or search for mysql-python in synaptic and install it. 
+
+You will also need to install pip or easy_install to get rid of the import error for pkg_resources (I have been switching between machines as I was building this, hence I have tried installations with both 'easy_install' and 'pip')
+
+In case of the infamous mysql error -
+ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/var/lib/mysql/mysql.sock' (2)
+try su -c '/sbin/service mysqld start'. This is only a temporary fix.
+
+One possible case is that the server is not running, its permanent solution is -
+1. Check if mysql server is running using 'ps -ef | grep mysql'
+2. If it does not show the server as running then try '/sbin/service mysqld start'
+3. If this worked then run 'chkconfig mysqld on' to add it to startup
+
+This should work only if the temporary fix (/sbin/service mysqld start) worked
+
+South -
+Install South using 'yum install Django-south.noarch'
+When using South do not include the created apps you want under South in the INSTALLLED_APPS. Add them only after having run 'python manage.py syncdb'
+After this you can add those apps in the INSTALLLED_APPS and run 'python manage.py schemamigration APP_NAME --initial'
+or else you will encounter OperationalError 1050, Table already exists.
+
+Piston -
+When using Piston if you get a 400 Bad Request check what the request header content-type says.
+If it says 'application/x-www-form-urlencoded; charset=UTF-8' (Firefox exhibited this behaviour)
+then you need to create a custom middleware [middleware.py] and add it to the settings file in the tuple MIDDLEWARE_CLASSES.
+This bug should be fixed in piston version 0.2.3 (not available on Fedora 16 using yum at the time of writing)
+
+To add login -
+Add "url(r'^login/$', 'django.contrib.auth.views.login', name='login')," to urls.py
+Create a folder 'registration' under 'templates'. In that folder create 'login.html' and you have your login
+To add logout -
+Add "url(r'^logout/$', 'django.contrib.auth.views.logout', name='logout')," to urls.py
+On pages you want to be able to logout from add '<a href="/logout"></a>'
+In the 'registration' folder create 'logged_out.html'
+Don't forget to add following to settings.py
+LOGIN_REDIRECT_URL = "/"
+LOGIN_URL = "/login/"
+
+|=============================================================================================================|
+|************************************************** Celery ***************************************************|
+|************ Celery is an asynchronous task queue/job queue based on distributed message passing ************|
+|=============================================================================================================|
+
+Adding Celery [http://celeryproject.org/] support to the django-base
+** important links for understanding and using Celery -
+http://www.turnkeylinux.org/blog/django-celery-rabbitmq
+http://bit.ly/gLye1c
+ 
+#To install Celery run
+su -c 'easy_install -U Celery'
+#for django port install, don't know if previous command is required or it is installed as dependency with following command
+su -c 'easy_install django-celery'
+
+Install RabbitMQ - http://www.rabbitmq.com/download.html
+
+Add foolowing to settings.py
+import djcelery
+djcelery.setup_loader()
+
+BROKER_HOST = "127.0.0.1"
+BROKER_PORT = 5672
+BROKER_VHOST = "/"
+BROKER_USER = "guest"
+BROKER_PASSWORD = "guest"
+
+INSTALLED_APPS = (
+                 ...
+                 'djcelery',
+                 )
+
+Run 'python manage.py syncdb'
+
+Create a module for tasks in your app, say tasks.py
+You can create and register tasks in this module
+To test the tasks call it from any of the views, don't forget to start the celery server 'python manage.py celeryd -l INFO'
+
+If you get the NotRegistered exception, check if you are importing the app the task is in directly and not using a relative import
+i.e. in INSTALLED_APPS it should be 'app' and not 'project.app'
+Following steps will attain this:
+#Add to settings.py
+import sys
+import os
+sys.path.append(os.getcwd())
+#then you can change INSTALLED_APPS 'project.app' to 'app'
+>>>>>>> javascripter
+
+|=============================================================================================================|
+|************************************************ Memcached **************************************************|
+|=============================================================================================================|
+
+** important links --
+http://ilian.i-n-i.org/caching-websites-with-django-and-memcached/
+
+yum install memcached
+yum install python-memcached
+Note - Try pylibmc instead of python-memcache, it’s not pure-python and is said to be about 2x faster, especially when caching heavily. Read about it and switch to it if its better.
+
+To settings.py add (for django version 1.3 and above) -
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}
+More info about cache backend configuration you can be found in Django documentation docs. https://docs.djangoproject.com/en/1.3/topics/cache/#memcached
+In views.py add 'from django.core.cache import cache'
+It can then be used as 'cache.set(cache_key, cache_data, cache_time)' and 'cache.get(cache_key)'
+- Had to run 'memcached' as a daemon to use this.
+
+===================== Steps to setup password reset =====================
+
+1. Add following to urlpatterns in urls.py
+  url(r'^reset_password/$', 'django.contrib.auth.views.password_reset', name='reset_password'),
+  url(r'^reset_password_done/$', 'django.contrib.auth.views.password_reset_done', name='reset_password_done'),
+  url(r'^reset_password_complete/$', 'django.contrib.auth.views.password_reset_complete', name='reset_password_complete'),
+  url(r'^reset/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm', name='reset_password_confirm'),
+
+  Create password_reset_form, password_reset_done, password_reset_complete and password_reset_confirm templates under templates/registration. They are created for you in this project.
+  For each of them have a look at the corresponding templates under templates/registration
+
+2. Create a password_reset_email template under templates/registration and setup your mail settings.
+   For the creation of a successful reset link in the password_reset_email template you will need the url filter from http://djangosnippets.org/snippets/1062/
+   
+  Instructions for setting up mail settings -
+    Add to settings.py
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    
+    Replace above line with to dummy email sending by printing the email on the console
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    
+    Replace above line with to dummy email sending by writing the email to a file
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = '/tmp/app-messages' # change this to a proper location
+
+And you have successfully setup password reset.
+
+If you want to test it.(Assuming you are running on the default localhost:8000) Go to http://localhost:8000/<reset-part-from-the-email>

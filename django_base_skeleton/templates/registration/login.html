@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <title>Django Skeleton</title>
+    <style type="text/css">
+      .topBar {
+        height: 125px;
+        width: 100%;
+        /* background: #ccc; */
+      }
+      .loginFormContainer {
+        margin: auto;
+        width: 240px;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+        padding: 2px 4px;
+      }
+      .loginFormContainer * {
+        font-size: 14px;
+        color: #555;        
+      }
+      .shadow {
+        -moz-box-shadow:    3px 3px 5px 6px #ccc;
+        -webkit-box-shadow: 3px 3px 5px 6px #ccc;
+        box-shadow:         3px 3px 5px 6px #ccc;
+      }
+      .submit {
+        background-color: #ddd;
+        border-radius: 3px;
+        padding: 2px 6px;
+        height: 25px;
+        float: right;
+        margin: 5px 10px 0px 0px;
+        clear: both;
+      }
+      .error {
+        font-size: 12px;
+        color: red;
+      }
+      body {
+        margin: 0px;
+      }
+      label {
+        display: inline-block;
+        width: 85px;
+      }
+      input[type=text], input[type=password] {
+        width: 140px;
+      }
+    </style>
+  </head>
+  <body>
+  {% block content %}
+    <div class="topBar"></div>
+    <div class="loginFormContainer shadow">
+      {% if form.errors %}
+        <p class="error">Sorry, that's not a valid username or password</p>
+      {% endif %}
+
+      <form action='.' method='post'>
+        {{ csrf_token|create_token }}
+        
+        <label for="username">Username:</label>
+        <input type="text" name="username" value="" placeholder="Username" autocomplete="off" id="username">
+        <div style="clear:both; margin-top:4px;"></div>
+        <label for="password">Password:</label>
+        <input type="password" name="password" value="" placeholder="Password" id="password">
+        <div style="clear:both"></div>
+        <div style="text-align:right; margin-right:10px;"><a href="/reset_password">Forgot password?</a></div>
+        <div style="clear:both"></div>
+        <input type="submit" value=" Login " class="submit"/>
+        <div style="clear:both"></div>
+        <input type="hidden" name="next" value="{{ next }}" />
+      </form>
+    </div>
+  {% endblock %}
+  </body>
+</html>
